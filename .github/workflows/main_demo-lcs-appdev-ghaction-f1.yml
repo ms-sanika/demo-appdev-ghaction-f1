@@ -1,0 +1,79 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+
+
+# GitHub Copilot: This is a GitHub Actions workflow file written in YAML format. The purpose of this file is to build and deploy a .NET Core 
+# application to an Azure Function App. The workflow is triggered by a manual trigger using the `workflow_dispatch` event. 
+
+# The file starts with comments that provide documentation for the Azure Web Apps Deploy action and a link to more GitHub Actions for Azure. 
+# The name of the workflow is specified on line 6. 
+
+# The `env` section defines environment variables that are used throughout the workflow. The `AZURE_FUNCTIONAPP_PACKAGE_PATH` variable is set 
+# to the current directory, which is the root of the repository. The `DOTNET_VERSION` variable is set to `6.0.x`. The `TEST` variable is set to `true`. 
+
+# The `jobs` section defines two jobs. The first job, `call-workflow-in-local-repo`, uses a reusable workflow defined in another file. 
+# The second job, `build-and-deploy`, is the main job that builds and deploys the application. 
+
+# The `build-and-deploy` job runs on a Windows machine and consists of several steps. The first step is a script that runs only if the `TEST` 
+# environment variable is set to `true`. The second step checks out the GitHub Action repository. The third step sets up the .NET environment using the `actions/setup-dotnet` action. The fourth step resolves project dependencies using the `dotnet build` command. The final step runs the Azure Functions Action to deploy the application to Azure. 
+
+# Overall, this workflow file automates the process of building and deploying a .NET Core application to an Azure Function App. 
+# It uses environment variables to configure the build and deployment process and defines two jobs to execute the workflow.
+
+
+
+name: Build and deploy dotnet core app to Azure Function App - demo-lcs-appdev-ghaction-f1
+
+on:
+  #push:
+  #  branches:
+  #    - main
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '6.0.x' # set this to the dotnet version to use
+  TEST: 'true'
+
+jobs:  
+  call-workflow-in-local-repo:
+    uses: ./.github/workflows/workflow-reusable.yml
+
+  build-and-deploy:    
+    #environment:
+    #  name: Pass Review
+    
+    runs-on: windows-latest
+    steps:
+      - name: 'Run a script'
+        if: ${{ env.TEST == 'true' }}
+        run: echo 'This job runs only if TEST is true'
+            
+      - name: 'Checkout GitHub Action'
+        if: ${{ env.TEST != 'true' }}
+        uses: actions/checkout@v2
+
+      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+        if: ${{ env.TEST != 'true' }}
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 'Resolve Project Dependencies Using Dotnet'
+        if: ${{ env.TEST != 'true' }}
+        shell: pwsh
+        run: |
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          dotnet build --configuration Release --output ./output
+          popd
+
+      - name: 'Run Azure Functions Action'
+        if: ${{ env.TEST != 'true' }}
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: 'demo-lcs-appdev-ghaction-f1'
+          slot-name: 'Production'
+          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_26C417C492A9421788FDC1EEC55C79A0 }}

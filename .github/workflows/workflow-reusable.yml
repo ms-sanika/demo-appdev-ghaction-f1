@@ -1,0 +1,11 @@
+name: Reusable Workflow
+
+on:
+    workflow_call:
+
+jobs:
+  hello-world:
+    runs-on: windows-latest
+    steps:
+      - name: Print Hello World
+        run: echo "Hello, World!"

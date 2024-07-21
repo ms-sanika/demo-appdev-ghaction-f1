@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "demo_lcs_appdev_ghaction_f1": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7099",
+      "launchBrowser": false
+    }
+  }
+}
